@@ -1,4 +1,4 @@
-import { BrowserRouter, NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { SearchProvider, useSearch } from './context/SearchContext'
 import { AdminLoginPage } from './admin/AdminLoginPage'
@@ -18,7 +18,7 @@ function HeaderSearch() {
 	return (
 		<input
 			className="header-search"
-			placeholder="Buscar por nombre o ingrediente..."
+			placeholder="Buscar por producto, ingrediente o categoría..."
 			value={query}
 			onChange={(e) => setQuery(e.target.value)}
 			aria-label="Buscar productos"
@@ -28,6 +28,7 @@ function HeaderSearch() {
 
 function AppShell({ children }) {
 	const [navOpen, setNavOpen] = useState(false)
+	const { pathname } = useLocation()
 
 	const toggleNav = () => setNavOpen(!navOpen)
 	const closeNav = () => setNavOpen(false)
@@ -36,7 +37,7 @@ function AppShell({ children }) {
 		<div className="app-shell">
 			<header className="main-header">
 				<h1>Prime Burger</h1>
-				<HeaderSearch />
+				{pathname === '/menu' && <HeaderSearch />}
 				<button className="hamburger-button" onClick={toggleNav} aria-label="Toggle menu">
 					<span></span>
 					<span></span>

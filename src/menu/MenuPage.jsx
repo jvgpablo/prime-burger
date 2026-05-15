@@ -14,23 +14,31 @@ export function MenuPage() {
       // apply search filtering if present
       if (!searchQuery || !searchQuery.trim()) return products
       const q = searchQuery.trim().toLowerCase()
-      return products.filter((p) => (p.title + ' ' + (p.description || '')).toLowerCase().includes(q))
+      return products.filter((p) =>
+        (p.title + ' ' + (p.description || '') + ' ' + p.category).toLowerCase().includes(q)
+      )
     }
 
     const byCategory = products.filter((product) => product.category === selectedCategory)
     if (!searchQuery || !searchQuery.trim()) return byCategory
     const q = searchQuery.trim().toLowerCase()
-    return byCategory.filter((p) => (p.title + ' ' + (p.description || '')).toLowerCase().includes(q))
-  }, [products, selectedCategory])
+    return byCategory.filter((p) =>
+      (p.title + ' ' + (p.description || '') + ' ' + p.category).toLowerCase().includes(q)
+    )
+  }, [products, selectedCategory, searchQuery])
 
   return (
-    <section>
-      <h2>Nuestro menu</h2>
-      <CategoryNav
-        selectedCategory={selectedCategory}
-        onSelectCategory={setSelectedCategory}
-      />
-      <ProductGrid products={filteredProducts} />
+    <section className="menu-page">
+      <div className="menu-page-header">
+        <h2>Nuestro menu</h2>
+      </div>
+      <div className="menu-page-content">
+        <CategoryNav
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+        />
+        <ProductGrid products={filteredProducts} />
+      </div>
     </section>
   )
 }

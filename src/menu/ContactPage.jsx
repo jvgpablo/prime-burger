@@ -1,7 +1,15 @@
 import { useSiteSettings } from '../context/SiteSettingsContext'
 
+function normalizeUrl(value) {
+  const trimmed = (value || '').trim()
+  if (!trimmed) return ''
+  if (/^https?:\/\//i.test(trimmed)) return trimmed
+  return `https://${trimmed}`
+}
+
 export function ContactPage() {
   const { settings } = useSiteSettings()
+  const whatsappUrl = normalizeUrl(settings.contact.whatsappLink)
 
   return (
     <section className="contact-page">
@@ -19,7 +27,20 @@ export function ContactPage() {
           <h3>Chat</h3>
           <p><strong>Teléfono:</strong> {settings.contact.phone}</p>
           <p>WhatsApp</p>
-          <button type="button">Iniciar chat</button>
+          <a
+            className="contact-card-button"
+            href={whatsappUrl || '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(event) => {
+              if (!whatsappUrl) {
+                event.preventDefault()
+              }
+            }}
+            aria-disabled={!whatsappUrl}
+          >
+            Iniciar chat
+          </a>
         </article>
 
         <article className="contact-card">

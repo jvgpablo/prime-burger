@@ -13,19 +13,6 @@ import { SiteSettingsProvider } from './context/SiteSettingsContext'
 import { CategoriesProvider } from './context/CategoriesContext'
 import './App.css'
 
-function HeaderSearch() {
-	const { query, setQuery } = useSearch()
-	return (
-		<input
-			className="header-search"
-			placeholder="Buscar por producto, ingrediente o categoría..."
-			value={query}
-			onChange={(e) => setQuery(e.target.value)}
-			aria-label="Buscar productos"
-		/>
-	)
-}
-
 function AppShell({ children }) {
 	const [navOpen, setNavOpen] = useState(false)
 	const { pathname } = useLocation()
@@ -37,7 +24,6 @@ function AppShell({ children }) {
 		<div className="app-shell">
 			<header className="main-header">
 				<h1>Prime Burger</h1>
-				{pathname === '/menu' && <HeaderSearch />}
 				<button className="hamburger-button" onClick={toggleNav} aria-label="Toggle menu">
 					<span></span>
 					<span></span>

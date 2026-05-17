@@ -5,6 +5,7 @@ const STORAGE_KEY = 'prime-burger-site-settings'
 const defaultSettings = {
   contact: {
     phone: '+57 300 000 0000',
+    whatsappLink: '',
     email: 'contacto@primeburger.com',
     address: 'Calle 123 #45-67',
     instagram: {

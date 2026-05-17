@@ -1,5 +1,16 @@
 import { useEffect, useState } from 'react'
 
+function normalizeUrl(value) {
+  const trimmed = (value || '').trim()
+  if (!trimmed) return ''
+  if (/^https?:\/\//i.test(trimmed)) return trimmed
+  return `https://${trimmed}`
+}
+
+function isValidWhatsappUrl(value) {
+  return /^(https?:\/\/)?(wa\.link|wa\.me|api\.whatsapp\.com)(\/|\?|$)/i.test((value || '').trim())
+}
+
 export function ContactSettingsForm({ contact, onSave }) {
   const [form, setForm] = useState(contact)
   const [errors, setErrors] = useState({})
@@ -60,6 +71,10 @@ export function ContactSettingsForm({ contact, onSave }) {
       nextErrors.instagramLink = 'El link debe comenzar con http:// o https://'
     }
 
+    if (form.whatsappLink?.trim() && !isValidWhatsappUrl(form.whatsappLink)) {
+      nextErrors.whatsappLink = 'El link de WhatsApp debe ser valido (wa.link, wa.me o api.whatsapp.com).'
+    }
+
     return nextErrors
   }
 
@@ -75,6 +90,7 @@ export function ContactSettingsForm({ contact, onSave }) {
 
     const contactData = {
       phone: form.phone.trim(),
+      whatsappLink: normalizeUrl(form.whatsappLink),
       email: form.email.trim(),
       address: form.address.trim(),
     }
@@ -98,6 +114,17 @@ export function ContactSettingsForm({ contact, onSave }) {
         Telefono
         <input name="phone" value={form.phone} onChange={handleChange} />
         {errors.phone ? <span className="field-error">{errors.phone}</span> : null}
+      </label>
+
+      <label>
+        WhatsApp - Link (opcional)
+        <input
+          name="whatsappLink"
+          value={form.whatsappLink || ''}
+          onChange={handleChange}
+          placeholder="wa.link/b497gf"
+        />
+        {errors.whatsappLink ? <span className="field-error">{errors.whatsappLink}</span> : null}
       </label>
 
       <label>

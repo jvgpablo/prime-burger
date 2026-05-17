@@ -12,10 +12,10 @@ export function HomePage() {
         <div className="home-animated-overlay" />
         <div className="home-animated-content">
           <div className="home-hero-copy home-hero-copy--dark">
-            <h2>La Mejor Sazón</h2>
-            <h3>Donde La Hamburguesa Reinará</h3>
+            <h2>La Mejor Sazon</h2>
+            <h3>Donde La Hamburguesa Reinara</h3>
             <p className="hero-description">
-              Calidad Garantizada, Sabor Explosivo y Hecho Con Pasión. Las hamburguesas más deliciosa
+              Calidad Garantizada, Sabor Explosivo y Hecho Con Pasion. Las hamburguesas más deliciosa
             </p>
             <div className="hero-actions">
               <Link className="home-feature-button" to="/menu">
@@ -36,8 +36,8 @@ export function HomePage() {
             alt="Hamburguesa con papas"
           />
           <div className="home-feature-box">
-            <h4 className="item-title">Servicio Rápido</h4>
-            <p className="item-price">No esperarás más de 10 minutos.</p>
+            <h4 className="item-title">Servicio Rapido</h4>
+            <p className="item-price">No esperaras mas de 10 minutos.</p>
             <p className="item-text">Ideal para quienes quieren comer bien sin perder tiempo.</p>
           </div>
         </article>
@@ -60,9 +60,9 @@ export function HomePage() {
             alt="Hamburguesa artesanal"
           />
           <div className="home-feature-box">
-            <h4 className="item-title">Hecho Con Pasión</h4>
-            <p className="item-price">Cada preparación sale con cariño.</p>
-            <p className="item-text">El diseño prioriza lo importante: texto claro y fotos potentes.</p>
+            <h4 className="item-title">Hecho Con Pasion</h4>
+            <p className="item-price">Cada preparacion sale con cariño.</p> 
+            <p className="item-text"></p>
           </div>
         </article>
       </section>

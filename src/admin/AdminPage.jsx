@@ -3,6 +3,7 @@ import { useProducts } from '../context/ProductsContext'
 import { useAuth } from '../context/AuthContext'
 import { useCategories } from '../context/CategoriesContext'
 import { useSiteSettings } from '../context/SiteSettingsContext'
+import { isFirebaseConfigured } from '../firebase/config'
 import { ProductForm } from './ProductForm'
 import { ProductTable } from './ProductTable'
 import { ContactSettingsForm } from './ContactSettingsForm'
@@ -96,6 +97,11 @@ export function AdminPage() {
         </button>
       </div>
       <p>Desde aqui puedes agregar, editar y eliminar productos del menu.</p>
+      <p className="form-success" style={{ marginBottom: '1rem' }}>
+        {isFirebaseConfigured
+          ? 'Firebase activo: los cambios deberian guardarse en la base de datos.'
+          : 'Modo local activo: los cambios solo se guardan en este navegador hasta configurar Firebase.'}
+      </p>
 
       <nav className="admin-tabs">
         <button

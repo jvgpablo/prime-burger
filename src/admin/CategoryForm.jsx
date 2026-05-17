@@ -8,6 +8,8 @@ export function CategoryForm({ editingCategory, onSave, onCancel }) {
   const [form, setForm] = useState(emptyForm)
   const [errors, setErrors] = useState({})
   const [submitError, setSubmitError] = useState('')
+  const [submitSuccess, setSubmitSuccess] = useState('')
+  const [successTimeoutId, setSuccessTimeoutId] = useState(null)
 
   useEffect(() => {
     if (editingCategory) {
@@ -25,6 +27,7 @@ export function CategoryForm({ editingCategory, onSave, onCancel }) {
     setForm((prev) => ({ ...prev, [name]: value }))
     setErrors((prev) => ({ ...prev, [name]: '' }))
     setSubmitError('')
+    setSubmitSuccess('')
   }
 
   function validate() {
@@ -42,9 +45,15 @@ export function CategoryForm({ editingCategory, onSave, onCancel }) {
   async function handleSubmit(event) {
     event.preventDefault()
 
+    if (successTimeoutId) {
+      clearTimeout(successTimeoutId)
+      setSuccessTimeoutId(null)
+    }
+
     const nextErrors = validate()
     setErrors(nextErrors)
     setSubmitError('')
+    setSubmitSuccess('')
 
     if (Object.keys(nextErrors).length > 0) {
       return
@@ -56,8 +65,15 @@ export function CategoryForm({ editingCategory, onSave, onCancel }) {
       if (!editingCategory) {
         setForm(emptyForm)
       }
+
+      setSubmitSuccess(editingCategory ? 'Categoria actualizada correctamente.' : 'Categoria agregada correctamente.')
+      const timeoutId = setTimeout(() => {
+        setSubmitSuccess('')
+        setSuccessTimeoutId(null)
+      }, 2500)
+      setSuccessTimeoutId(timeoutId)
     } catch (error) {
-      setSubmitError(error.message)
+      setSubmitError(error?.message || 'No se pudo guardar la categoria.')
     }
   }
 
@@ -71,6 +87,7 @@ export function CategoryForm({ editingCategory, onSave, onCancel }) {
         {errors.name ? <span className="field-error">{errors.name}</span> : null}
       </label>
 
+      {submitSuccess ? <p className="form-success">{submitSuccess}</p> : null}
       {submitError ? <p className="form-error">{submitError}</p> : null}
 
       <div className="admin-actions">

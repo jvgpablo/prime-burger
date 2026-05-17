@@ -20,9 +20,11 @@ export function ProductForm({ editingProduct, onSave, onCancel }) {
   const [form, setForm] = useState(emptyForm)
   const [errors, setErrors] = useState({})
   const [submitError, setSubmitError] = useState('')
+  const [submitSuccess, setSubmitSuccess] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState('')
+  const [successTimeoutId, setSuccessTimeoutId] = useState(null)
 
   function isValidUrl(value) {
     try {
@@ -51,6 +53,7 @@ export function ProductForm({ editingProduct, onSave, onCancel }) {
     setForm((prev) => ({ ...prev, [name]: value }))
     setErrors((prev) => ({ ...prev, [name]: '' }))
     setSubmitError('')
+    setSubmitSuccess('')
   }
 
   async function handleFileChange(event) {
@@ -126,9 +129,15 @@ export function ProductForm({ editingProduct, onSave, onCancel }) {
   async function handleSubmit(event) {
     event.preventDefault()
 
+    if (successTimeoutId) {
+      clearTimeout(successTimeoutId)
+      setSuccessTimeoutId(null)
+    }
+
     const nextErrors = validate()
     setErrors(nextErrors)
     setSubmitError('')
+    setSubmitSuccess('')
 
     if (Object.keys(nextErrors).length > 0) {
       return
@@ -141,6 +150,13 @@ export function ProductForm({ editingProduct, onSave, onCancel }) {
       if (!editingProduct) {
         setForm(emptyForm)
       }
+
+      setSubmitSuccess(editingProduct ? 'Producto actualizado correctamente.' : 'Producto agregado correctamente.')
+      const timeoutId = setTimeout(() => {
+        setSubmitSuccess('')
+        setSuccessTimeoutId(null)
+      }, 2500)
+      setSuccessTimeoutId(timeoutId)
     } catch (error) {
       setSubmitError(error?.message || 'No se pudo guardar el producto.')
     } finally {
@@ -198,6 +214,7 @@ export function ProductForm({ editingProduct, onSave, onCancel }) {
         </div>
       ) : null}
 
+      {submitSuccess ? <p className="form-success">{submitSuccess}</p> : null}
       {submitError ? <p className="form-error">{submitError}</p> : null}
 
       <label>

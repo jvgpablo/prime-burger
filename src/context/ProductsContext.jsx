@@ -1,36 +1,12 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { initialProducts } from '../data/initialProducts'
-
-const STORAGE_KEY = 'prime-burger-products'
+import { isFirebaseConfigured } from '../firebase/config'
+import { createProduct, deleteProduct, subscribeToProducts, updateProduct } from '../services/firestore.service'
 
 const ProductsContext = createContext(null)
 
-function getSavedProducts() {
-  const raw = localStorage.getItem(STORAGE_KEY)
-
-  if (!raw) {
-    return initialProducts
-  }
-
-  try {
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : initialProducts
-  } catch {
-    return initialProducts
-  }
-}
-
-function generateId() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID()
-  }
-
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`
-}
-
 function normalizeProduct(product) {
   return {
-    id: product.id ?? generateId(),
     title: product.title.trim(),
     description: product.description.trim(),
     price: Number(product.price),
@@ -40,33 +16,61 @@ function normalizeProduct(product) {
 }
 
 export function ProductsProvider({ children }) {
-  const [products, setProducts] = useState(getSavedProducts)
+  const [products, setProducts] = useState(initialProducts)
 
-  function syncStorage(nextProducts) {
-    setProducts(nextProducts)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextProducts))
+  useEffect(() => {
+    let unsubscribe = () => {}
+    let isActive = true
+
+    subscribeToProducts((nextProducts) => {
+      if (isActive) {
+        setProducts(nextProducts)
+      }
+    })
+      .then((nextUnsubscribe) => {
+        if (!isActive) {
+          nextUnsubscribe?.()
+          return
+        }
+
+        unsubscribe = nextUnsubscribe || (() => {})
+      })
+      .catch((error) => {
+        console.error('No se pudieron cargar los productos.', error)
+      })
+
+    return () => {
+      isActive = false
+      unsubscribe()
+    }
+  }, [])
+
+  async function addProduct(product) {
+    const createdProduct = await createProduct(normalizeProduct(product))
+
+    if (!isFirebaseConfigured) {
+      setProducts((prev) => [...prev, createdProduct])
+    }
   }
 
-  function addProduct(product) {
-    const nextProducts = [...products, normalizeProduct(product)]
-    syncStorage(nextProducts)
+  async function updateExistingProduct(updatedProduct) {
+    const nextProduct = await updateProduct(updatedProduct)
+
+    if (!isFirebaseConfigured) {
+      setProducts((prev) => prev.map((product) => (product.id === nextProduct.id ? nextProduct : product)))
+    }
   }
 
-  function updateProduct(updatedProduct) {
-    const normalized = normalizeProduct(updatedProduct)
-    const nextProducts = products.map((product) =>
-      product.id === normalized.id ? normalized : product,
-    )
-    syncStorage(nextProducts)
-  }
+  async function removeProduct(productId) {
+    await deleteProduct(productId)
 
-  function deleteProduct(productId) {
-    const nextProducts = products.filter((product) => product.id !== productId)
-    syncStorage(nextProducts)
+    if (!isFirebaseConfigured) {
+      setProducts((prev) => prev.filter((product) => product.id !== productId))
+    }
   }
 
   const value = useMemo(
-    () => ({ products, addProduct, updateProduct, deleteProduct }),
+    () => ({ products, addProduct, updateProduct: updateExistingProduct, deleteProduct: removeProduct }),
     [products],
   )
 

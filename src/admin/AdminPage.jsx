@@ -19,14 +19,14 @@ export function AdminPage() {
   const [activeTab, setActiveTab] = useState('productos')
   const [deleteConfirm, setDeleteConfirm] = useState(null)
 
-  function handleSave(formProduct) {
+  async function handleSave(formProduct) {
     if (editingProduct) {
-      updateProduct({ ...formProduct, id: editingProduct.id })
+      await updateProduct({ ...formProduct, id: editingProduct.id, createdAt: editingProduct.createdAt })
       setEditingProduct(null)
       return
     }
 
-    addProduct(formProduct)
+    await addProduct(formProduct)
   }
 
   function handleEdit(product) {
@@ -53,14 +53,14 @@ export function AdminPage() {
     setEditingProduct(null)
   }
 
-  function handleSaveCategory(formCategory) {
+  async function handleSaveCategory(formCategory) {
     if (editingCategory) {
-      updateCategory({ ...formCategory, id: editingCategory.id })
+      await updateCategory({ ...formCategory, id: editingCategory.id, createdAt: editingCategory.createdAt })
       setEditingCategory(null)
       return
     }
 
-    addCategory(formCategory)
+    await addCategory(formCategory)
   }
 
   function handleEditCategory(category) {

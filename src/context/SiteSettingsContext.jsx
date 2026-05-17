@@ -1,6 +1,8 @@
-import { createContext, useContext, useMemo, useState } from 'react'
-
-const STORAGE_KEY = 'prime-burger-site-settings'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import {
+  saveContactSettings,
+  subscribeToContactSettings,
+} from '../services/firestore.service'
 
 const defaultSettings = {
   contact: {
@@ -17,32 +19,37 @@ const defaultSettings = {
 
 const SiteSettingsContext = createContext(null)
 
-function getSavedSettings() {
-  const raw = localStorage.getItem(STORAGE_KEY)
-
-  if (!raw) {
-    return defaultSettings
-  }
-
-  try {
-    const parsed = JSON.parse(raw)
-    return {
-      ...defaultSettings,
-      ...parsed,
-      contact: {
-        ...defaultSettings.contact,
-        ...(parsed.contact || {}),
-      },
-    }
-  } catch {
-    return defaultSettings
-  }
-}
-
 export function SiteSettingsProvider({ children }) {
-  const [settings, setSettings] = useState(getSavedSettings)
+  const [settings, setSettings] = useState(defaultSettings)
 
-  function updateContact(contact) {
+  useEffect(() => {
+    let unsubscribe = () => {}
+    let isActive = true
+
+    subscribeToContactSettings((nextSettings) => {
+      if (isActive) {
+        setSettings(nextSettings)
+      }
+    })
+      .then((nextUnsubscribe) => {
+        if (!isActive) {
+          nextUnsubscribe?.()
+          return
+        }
+
+        unsubscribe = nextUnsubscribe || (() => {})
+      })
+      .catch((error) => {
+        console.error('No se pudieron cargar los ajustes de contacto.', error)
+      })
+
+    return () => {
+      isActive = false
+      unsubscribe()
+    }
+  }, [])
+
+  async function updateContact(contact) {
     const nextSettings = {
       ...settings,
       contact: {
@@ -51,8 +58,8 @@ export function SiteSettingsProvider({ children }) {
       },
     }
 
+    await saveContactSettings(nextSettings.contact)
     setSettings(nextSettings)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextSettings))
   }
 
   const value = useMemo(

@@ -39,18 +39,19 @@ export function CategoryForm({ editingCategory, onSave, onCancel }) {
     return nextErrors
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
 
     const nextErrors = validate()
     setErrors(nextErrors)
+    setSubmitError('')
 
     if (Object.keys(nextErrors).length > 0) {
       return
     }
 
     try {
-      onSave({ name: form.name.trim() })
+      await onSave({ name: form.name.trim() })
 
       if (!editingCategory) {
         setForm(emptyForm)

@@ -15,6 +15,7 @@ export function ContactSettingsForm({ contact, onSave }) {
   const [form, setForm] = useState(contact)
   const [errors, setErrors] = useState({})
   const [successMessage, setSuccessMessage] = useState('')
+  const [submitError, setSubmitError] = useState('')
 
   useEffect(() => {
     setForm(contact)
@@ -38,6 +39,7 @@ export function ContactSettingsForm({ contact, onSave }) {
     
     setErrors((prev) => ({ ...prev, [name]: '' }))
     setSuccessMessage('')
+    setSubmitError('')
   }
 
   function validate() {
@@ -78,11 +80,12 @@ export function ContactSettingsForm({ contact, onSave }) {
     return nextErrors
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
 
     const nextErrors = validate()
     setErrors(nextErrors)
+    setSubmitError('')
 
     if (Object.keys(nextErrors).length > 0) {
       return
@@ -102,8 +105,12 @@ export function ContactSettingsForm({ contact, onSave }) {
       }
     }
 
-    onSave(contactData)
-    setSuccessMessage('Contacto actualizado correctamente.')
+    try {
+      await onSave(contactData)
+      setSuccessMessage('Contacto actualizado correctamente.')
+    } catch (error) {
+      setSubmitError(error?.message || 'No se pudo guardar el contacto.')
+    }
   }
 
   return (
@@ -162,6 +169,7 @@ export function ContactSettingsForm({ contact, onSave }) {
       </label>
 
       {successMessage ? <p className="form-success">{successMessage}</p> : null}
+      {submitError ? <p className="form-error">{submitError}</p> : null}
 
       <div className="admin-actions">
         <button type="submit">Guardar contacto</button>

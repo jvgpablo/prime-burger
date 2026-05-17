@@ -1,79 +1,90 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { productCategories as initialCategories } from '../data/initialProducts'
-
-const STORAGE_KEY = 'prime-burger-categories'
+import { isFirebaseConfigured } from '../firebase/config'
+import {
+  createCategory,
+  deleteCategory,
+  subscribeToCategories,
+  updateCategory,
+} from '../services/firestore.service'
 
 const CategoriesContext = createContext(null)
 
-function getSavedCategories() {
-  const raw = localStorage.getItem(STORAGE_KEY)
-
-  if (!raw) {
-    return initialCategories
-  }
-
-  try {
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : initialCategories
-  } catch {
-    return initialCategories
-  }
-}
-
-function generateId() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID()
-  }
-
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`
-}
-
 function normalizeCategory(category) {
   return {
-    id: category.id ?? generateId(),
+    id: category.id,
     name: category.name.trim(),
   }
 }
 
 export function CategoriesProvider({ children }) {
-  const [categories, setCategories] = useState(getSavedCategories)
+  const [categories, setCategories] = useState(initialCategories)
 
-  function syncStorage(nextCategories) {
-    setCategories(nextCategories)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextCategories))
-  }
+  useEffect(() => {
+    let unsubscribe = () => {}
+    let isActive = true
 
-  function addCategory(category) {
+    subscribeToCategories((nextCategories) => {
+      if (isActive) {
+        setCategories(nextCategories)
+      }
+    })
+      .then((nextUnsubscribe) => {
+        if (!isActive) {
+          nextUnsubscribe?.()
+          return
+        }
+
+        unsubscribe = nextUnsubscribe || (() => {})
+      })
+      .catch((error) => {
+        console.error('No se pudieron cargar las categorias.', error)
+      })
+
+    return () => {
+      isActive = false
+      unsubscribe()
+    }
+  }, [])
+
+  async function addCategory(category) {
     const normalized = normalizeCategory(category)
 
     if (categories.some((c) => c.name.toLowerCase() === normalized.name.toLowerCase())) {
       throw new Error('Esta categoria ya existe.')
     }
 
-    const nextCategories = [...categories, normalized]
-    syncStorage(nextCategories)
+    const createdCategory = await createCategory(normalized)
+
+    if (!isFirebaseConfigured) {
+      setCategories((prev) => [...prev, createdCategory])
+    }
   }
 
-  function updateCategory(updatedCategory) {
+  async function updateExistingCategory(updatedCategory) {
     const normalized = normalizeCategory(updatedCategory)
 
-    if (categories.some((c) => c.id !== normalized.id && c.name.toLowerCase() === normalized.name.toLowerCase())) {
+    if (categories.some((c) => c.id !== updatedCategory.id && c.name.toLowerCase() === normalized.name.toLowerCase())) {
       throw new Error('Ya existe una categoria con este nombre.')
     }
 
-    const nextCategories = categories.map((category) =>
-      category.id === normalized.id ? normalized : category,
-    )
-    syncStorage(nextCategories)
+    const nextCategory = await updateCategory(updatedCategory)
+
+    if (!isFirebaseConfigured) {
+      setCategories((prev) => prev.map((category) => (category.id === nextCategory.id ? nextCategory : category)))
+    }
   }
 
-  function deleteCategory(categoryId) {
-    const nextCategories = categories.filter((category) => category.id !== categoryId)
-    syncStorage(nextCategories)
+  async function removeCategory(categoryId) {
+    await deleteCategory(categoryId)
+
+    if (!isFirebaseConfigured) {
+      setCategories((prev) => prev.filter((category) => category.id !== categoryId))
+    }
   }
 
   const value = useMemo(
-    () => ({ categories, addCategory, updateCategory, deleteCategory }),
+    () => ({ categories, addCategory, updateCategory: updateExistingCategory, deleteCategory: removeCategory }),
     [categories],
   )
 

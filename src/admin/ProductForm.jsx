@@ -19,6 +19,8 @@ export function ProductForm({ editingProduct, onSave, onCancel }) {
   const { categories } = useCategories()
   const [form, setForm] = useState(emptyForm)
   const [errors, setErrors] = useState({})
+  const [submitError, setSubmitError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState('')
 
@@ -48,6 +50,7 @@ export function ProductForm({ editingProduct, onSave, onCancel }) {
     const { name, value } = event.target
     setForm((prev) => ({ ...prev, [name]: value }))
     setErrors((prev) => ({ ...prev, [name]: '' }))
+    setSubmitError('')
   }
 
   async function handleFileChange(event) {
@@ -120,20 +123,28 @@ export function ProductForm({ editingProduct, onSave, onCancel }) {
     return nextErrors
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
 
     const nextErrors = validate()
     setErrors(nextErrors)
+    setSubmitError('')
 
     if (Object.keys(nextErrors).length > 0) {
       return
     }
 
-    onSave(form)
+    try {
+      setIsSubmitting(true)
+      await onSave(form)
 
-    if (!editingProduct) {
-      setForm(emptyForm)
+      if (!editingProduct) {
+        setForm(emptyForm)
+      }
+    } catch (error) {
+      setSubmitError(error?.message || 'No se pudo guardar el producto.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -187,6 +198,8 @@ export function ProductForm({ editingProduct, onSave, onCancel }) {
         </div>
       ) : null}
 
+      {submitError ? <p className="form-error">{submitError}</p> : null}
+
       <label>
         Categoria
         <select name="category" value={form.category} onChange={handleChange}>
@@ -200,7 +213,9 @@ export function ProductForm({ editingProduct, onSave, onCancel }) {
       </label>
 
       <div className="admin-actions">
-        <button type="submit">{editingProduct ? 'Guardar cambios' : 'Agregar producto'}</button>
+        <button type="submit" disabled={isSubmitting || uploading}>
+          {isSubmitting ? 'Guardando...' : editingProduct ? 'Guardar cambios' : 'Agregar producto'}
+        </button>
         {editingProduct ? (
           <button type="button" onClick={onCancel}>
             Cancelar

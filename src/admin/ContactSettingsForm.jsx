@@ -16,6 +16,7 @@ export function ContactSettingsForm({ contact, onSave }) {
   const [errors, setErrors] = useState({})
   const [successMessage, setSuccessMessage] = useState('')
   const [submitError, setSubmitError] = useState('')
+  const [successTimeoutId, setSuccessTimeoutId] = useState(null)
 
   useEffect(() => {
     setForm(contact)
@@ -83,9 +84,15 @@ export function ContactSettingsForm({ contact, onSave }) {
   async function handleSubmit(event) {
     event.preventDefault()
 
+    if (successTimeoutId) {
+      clearTimeout(successTimeoutId)
+      setSuccessTimeoutId(null)
+    }
+
     const nextErrors = validate()
     setErrors(nextErrors)
     setSubmitError('')
+    setSuccessMessage('')
 
     if (Object.keys(nextErrors).length > 0) {
       return
@@ -108,6 +115,13 @@ export function ContactSettingsForm({ contact, onSave }) {
     try {
       await onSave(contactData)
       setSuccessMessage('Contacto actualizado correctamente.')
+
+      const timeoutId = setTimeout(() => {
+        setSuccessMessage('')
+        setSuccessTimeoutId(null)
+      }, 2500)
+
+      setSuccessTimeoutId(timeoutId)
     } catch (error) {
       setSubmitError(error?.message || 'No se pudo guardar el contacto.')
     }

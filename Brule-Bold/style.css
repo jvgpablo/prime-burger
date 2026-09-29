@@ -1,0 +1,9 @@
+@font-face {
+    font-family: 'Brule';
+    src: local('Brule Bold'), local('Brule-Bold'),
+        url('Brule-Bold.woff2') format('woff2'),
+        url('Brule-Bold.woff') format('woff'),
+        url('Brule-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+  }
